@@ -56,6 +56,14 @@ PATCHES = [
     ('gverbs.zil',
      '"Well, for one, you are playing Zork..."',
      '"Well, for one, June is still up there. You can count on her."'),
+    # turning things off shouldn't try to pick them up first (the radio is furniture)
+    ('gsyntax.zil',
+     '<SYNTAX TURN OFF OBJECT (FIND ONBIT)\n\t(HELD CARRIED ON-GROUND IN-ROOM TAKE HAVE) = V-LAMP-OFF>',
+     '<SYNTAX TURN OFF OBJECT (FIND ONBIT)\n\t(HELD CARRIED ON-GROUND IN-ROOM) = V-LAMP-OFF>'),
+    # the lines for jumping somewhere you shouldn't
+    ('gverbs.zil',
+     '"You should have looked before you leaped."\n\t       "In the movies, your life would be passing before your eyes."\n\t       "Geronimo..."',
+     '"The dark takes a long time to reach the bottom."\n\t       "On the way down you hear humming, and then you don\'t."\n\t       "You fall, and something below you is already smiling."'),
     # Zork II/III lake rooms that the fallback branches name
     ('gverbs.zil',
      "'<COND (<EQUAL? ,HERE ,ON-LAKE>\n\t\t\t\t\t      ,IN-LAKE)\n\t\t\t\t\t     (T\n\t\t\t\t\t      ,HERE)>",

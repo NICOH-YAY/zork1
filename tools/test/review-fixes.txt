@@ -1,0 +1,16 @@
+# fixes from code review: radio off, lamp off in a lit room, jump at the well
+s
+jump
+n
+open window
+w
+w
+turn on radio
+turn off radio
+turn on radio
+e
+open pantry
+take lamp
+take matches
+light lamp
+turn off lamp

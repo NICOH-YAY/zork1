@@ -373,7 +373,12 @@ through."
 		      <TELL "The kitchen, lit and warm and wrong." CR>)>)>>
 
 <ROUTINE WELL-TOP-F (RARG)
-	<COND (<EQUAL? .RARG ,M-LOOK>
+	<COND (<AND <EQUAL? .RARG ,M-BEG> <VERB? LEAP>>
+	       <TELL
+"You climb up onto the lip of the well and look down into the black. It looks
+back. You climb down again." CR>
+	       <RTRUE>)
+	      (<EQUAL? .RARG ,M-LOOK>
 	       <TELL
 "An old stone well stands in the grass south of the house, with a wooden
 bucket hung from a winch over the opening. ">
@@ -628,7 +633,8 @@ circle of light opens around you." CR>
 		      <FCLEAR ,LAMP ,ONBIT>
 		      <SETG LIT <LIT? ,HERE>>
 		      <TELL "You turn the wick down until the flame goes out." CR>
-		      <COND (<NOT ,LIT> <TELL "It is very dark." CR>)>)
+		      <COND (<NOT ,LIT> <TELL "It is very dark." CR>)>
+		      <RTRUE>)
 		     (T
 		      <TELL "It isn't lit." CR>)>)
 	      (<VERB? EXAMINE>

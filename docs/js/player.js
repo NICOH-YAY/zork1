@@ -205,7 +205,7 @@
 		if(has(/shrinks to a blue bead|wick down until|puts it back/)) st.lamp = false;
 		if(has(/Mother isn't here/)) st.motherKitchen = false;
 		if(has(/stands in front of the radio/)) { st.motherRadio = true; st.motherKitchen = false; st.radioOn = true; }
-		if(has(/walks back into the kitchen/)) { st.motherRadio = false; st.motherKitchen = true; st.radioOn = false; }
+		if(has(/walks back into the kitchen|radio go quiet/)) { st.motherRadio = false; st.motherKitchen = true; st.radioOn = false; }
 		if(has(/radio warms up/)) st.radioOn = true;
 		if(has(/switch the radio off/)) st.radioOn = false;
 		if(has(/takes hold of your sleeve/)) st.juneFollow = true;

@@ -856,9 +856,9 @@ killing yourself." CR CR>
 
 <GLOBAL JUMPLOSS
 	<LTABLE 0
-	       "You should have looked before you leaped."
-	       "In the movies, your life would be passing before your eyes."
-	       "Geronimo...">>
+	       "The dark takes a long time to reach the bottom."
+	       "On the way down you hear humming, and then you don't."
+	       "You fall, and something below you is already smiling.">>
 
 <ROUTINE V-LEAVE () <DO-WALK ,P?OUT>>
 
