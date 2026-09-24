@@ -1,3 +1,6 @@
+> **This fork is Hollow House, a new horror game built from the Zork I source.** It is 3:00 AM at the house where your sister went missing, and every night resets at 3:33.
+> [Play it in your browser](https://nicoh-yay.github.io/zork1/) · [Design, rules and evidence](HOLLOW.md) · The original Zork I files below are unchanged (MIT, Microsoft 2025).
+
 # Zork I Source Code Collection
 
 Zork I is a 1980 interactive fiction game written by Marc Blank, Dave Lebling, Bruce Daniels and Tim Anderson and published by Infocom.

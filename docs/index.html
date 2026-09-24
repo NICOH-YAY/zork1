@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hollow House</title>
+<meta name="description" content="An interactive horror built from the Zork I source. It is 3:00 AM, every night.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<style>
+	:root {
+		--bg: #030504;
+		--panel: #07100b;
+		--ink: #a8c398;
+		--dim: #5f7d58;
+		--bone: #ddd5b0;
+		--yellow: #ecc94b;
+		--red: #b3322b;
+		--line: #1f4430;
+	}
+	* { box-sizing: border-box; }
+	html, body { margin: 0; height: 100%; }
+	body {
+		background: var(--bg);
+		color: var(--ink);
+		font-family: 'VT323', 'Courier New', monospace;
+		font-size: 21px;
+		line-height: 1.25;
+		overflow: hidden;
+	}
+	/* the screen itself: scanlines and a dark edge */
+	body::after {
+		content: '';
+		position: fixed;
+		inset: 0;
+		pointer-events: none;
+		z-index: 50;
+		background:
+			repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,0.22) 2px 3px),
+			radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.75) 100%);
+	}
+	#grain {
+		position: fixed;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+		z-index: 49;
+		opacity: 0.3;
+		mix-blend-mode: screen;
+		image-rendering: pixelated;
+	}
+	[hidden] { display: none !important; }
+
+	.app {
+		height: 100%;
+		max-width: 1180px;
+		margin: 0 auto;
+		display: grid;
+		grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+		grid-template-rows: auto minmax(0, 1fr);
+		gap: 14px;
+		padding: 14px 16px;
+	}
+	header {
+		grid-column: 1 / -1;
+		display: flex;
+		align-items: baseline;
+		gap: 22px;
+		border-bottom: 1px solid var(--line);
+		padding-bottom: 6px;
+	}
+	#clock { font-size: 34px; color: var(--bone); letter-spacing: 2px; }
+	#clock.late { color: var(--red); animation: pulse 1s steps(2) infinite; }
+	#night { color: var(--dim); letter-spacing: 3px; }
+	#room { flex: 1; text-align: right; color: var(--ink); }
+	.icon-btn {
+		background: none;
+		border: 1px solid var(--line);
+		color: var(--dim);
+		font: inherit;
+		padding: 0 10px;
+		cursor: pointer;
+	}
+	.icon-btn:hover { color: var(--bone); border-color: var(--dim); }
+
+	.left { display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+	.stage {
+		position: relative;
+		border: 4px double var(--line);
+		background: #000;
+	}
+	#scene {
+		display: block;
+		width: 100%;
+		aspect-ratio: 16 / 10;
+		image-rendering: pixelated;
+	}
+	#grin {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		width: 38%;
+		aspect-ratio: 64 / 28;
+		image-rendering: pixelated;
+		border: 3px solid var(--bone);
+		box-shadow: 0 0 0 3px #000;
+	}
+
+	/* the dialog box, under the picture */
+	.dialog-slot { position: relative; min-height: 168px; }
+	#dialog-idle {
+		height: 100%;
+		min-height: 168px;
+		border: 1px dashed var(--line);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #2c4a35;
+		letter-spacing: 4px;
+	}
+	.dialog {
+		position: relative;
+		display: grid;
+		grid-template-columns: 150px 1fr;
+		min-height: 168px;
+		gap: 12px;
+		background: rgba(3, 6, 4, 0.94);
+		border: 4px double var(--bone);
+		padding: 10px 12px 12px;
+		cursor: pointer;
+		animation: rise 0.18s ease-out;
+	}
+	.dialog.june { border-color: var(--yellow); }
+	#portrait {
+		width: 100%;
+		aspect-ratio: 1;
+		image-rendering: pixelated;
+		border: 2px solid currentColor;
+	}
+	.dialog.mother #portrait { color: var(--bone); }
+	.dialog.june #portrait { color: var(--yellow); }
+	#dialog-name {
+		display: inline-block;
+		letter-spacing: 3px;
+		color: var(--bone);
+		border-bottom: 1px solid var(--line);
+		margin-bottom: 4px;
+	}
+	.dialog.june #dialog-name { color: var(--yellow); }
+	#dialog-text { margin: 0; color: var(--bone); font-size: 22px; }
+	#dialog-more {
+		position: absolute;
+		right: 12px;
+		bottom: 4px;
+		color: var(--bone);
+		animation: pulse 0.8s steps(2) infinite;
+	}
+
+	.console {
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		border: 1px solid var(--line);
+		background: var(--panel);
+	}
+	#log {
+		flex: 1;
+		overflow-y: auto;
+		padding: 10px 14px;
+		scrollbar-color: var(--line) transparent;
+	}
+	#log p { margin: 0 0 10px; white-space: pre-wrap; }
+	#log p.echo { color: var(--bone); margin-top: 14px; }
+	#log p.speech { color: var(--bone); border-left: 2px solid var(--bone); padding-left: 8px; }
+	#log p.speech.june { border-color: var(--yellow); }
+	#log p.error { color: var(--red); }
+	.night-break {
+		margin: 18px 0;
+		text-align: center;
+		color: var(--dim);
+		letter-spacing: 4px;
+		border-top: 1px dashed var(--line);
+		border-bottom: 1px dashed var(--line);
+	}
+	#prompt {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		border-top: 1px solid var(--line);
+		padding: 8px 12px;
+	}
+	#prompt::before { content: '>'; color: var(--bone); }
+	#prompt.waiting { opacity: 0.4; }
+	#cmd {
+		flex: 1;
+		min-width: 0;
+		background: none;
+		border: none;
+		outline: none;
+		color: var(--bone);
+		font: inherit;
+		caret-color: var(--bone);
+	}
+	.chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 10px; }
+	.chips button {
+		background: none;
+		border: 1px solid var(--line);
+		color: var(--dim);
+		font: inherit;
+		font-size: 18px;
+		padding: 0 8px;
+		cursor: pointer;
+	}
+	.chips button:hover { color: var(--bone); border-color: var(--dim); }
+
+	/* full-screen moments */
+	.overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 40;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		padding: 24px;
+	}
+	#title { background: var(--bg); }
+	#title h1 {
+		margin: 0;
+		font-weight: normal;
+		font-size: clamp(56px, 12vw, 120px);
+		letter-spacing: 8px;
+		color: var(--bone);
+		text-shadow: 3px 0 var(--red), -2px 0 #1f4430;
+	}
+	#title p { color: var(--dim); max-width: 34em; }
+	.big-btn {
+		margin-top: 18px;
+		background: none;
+		border: 4px double var(--bone);
+		color: var(--bone);
+		font: inherit;
+		font-size: 30px;
+		letter-spacing: 6px;
+		padding: 6px 28px;
+		cursor: pointer;
+	}
+	.big-btn:hover { background: var(--bone); color: #000; }
+	.small { font-size: 17px; color: var(--dim); }
+	.small a { color: var(--ink); }
+
+	#scare { background: #000; z-index: 45; }
+	#scare-grin { width: min(90vw, 900px); aspect-ratio: 64 / 28; image-rendering: pixelated; }
+	#rewind {
+		background: #0b120d;
+		background-image: repeating-linear-gradient(to bottom, rgba(168,195,152,0.08) 0 1px, transparent 1px 5px);
+		z-index: 45;
+		animation: static 0.12s steps(3) infinite;
+	}
+	#rewind .rw { font-size: clamp(48px, 10vw, 110px); color: var(--bone); letter-spacing: 6px; }
+	#rewind-night { color: var(--dim); letter-spacing: 6px; }
+	.ending { background: rgba(3, 5, 4, 0.96); }
+	.ending.dawn { background: linear-gradient(#2a2f2b, #9ea79a); color: #101510; }
+	.ending.dawn #ending-title { color: #fbfaf2; }
+	.ending.dawn .big-btn { color: #101510; border-color: #101510; }
+	.ending.dawn .big-btn:hover { background: #101510; color: #fbfaf2; }
+	#ending-sub { max-width: 36em; white-space: pre-wrap; }
+	.ending.dinner #ending-title { color: var(--red); }
+	#ending-title { font-size: clamp(52px, 11vw, 120px); letter-spacing: 6px; margin: 0; font-weight: normal; }
+	#help { background: rgba(3, 5, 4, 0.97); align-items: stretch; }
+	.help-body { max-width: 760px; margin: 0 auto; text-align: left; overflow-y: auto; }
+	.help-body h2 { color: var(--bone); font-weight: normal; letter-spacing: 3px; margin: 18px 0 6px; }
+	.help-body code { color: var(--bone); }
+	.help-body a { color: var(--bone); }
+
+	body.shake .app { animation: shake 0.1s steps(2) 4; }
+
+	@keyframes pulse { 50% { opacity: 0.25; } }
+	@keyframes rise { from { transform: translateY(12px); opacity: 0; } }
+	@keyframes shake { 0% { transform: translate(4px, -3px); } 100% { transform: translate(-4px, 3px); } }
+	@keyframes static {
+		0% { background-position: 0 0; filter: brightness(1); }
+		50% { filter: brightness(1.6); }
+		100% { background-position: 0 40px; }
+	}
+
+	@media (max-width: 820px) {
+		body { overflow: auto; font-size: 20px; }
+		.app { grid-template-columns: 1fr; grid-template-rows: auto auto minmax(320px, 1fr); height: auto; min-height: 100%; }
+		.dialog { grid-template-columns: 96px 1fr; min-height: 0; }
+		.dialog-slot { min-height: 0; }
+		#dialog-idle { display: none; }
+		.console { height: 62vh; min-height: 0; }
+		#room { display: none; }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		body.shake .app, #rewind, #clock.late, #dialog-more { animation: none; }
+	}
+</style>
+</head>
+<body>
+<canvas id="grain" aria-hidden="true"></canvas>
+
+<div class="app">
+	<header>
+		<span id="clock">3:00 AM</span>
+		<span id="night">NIGHT 1</span>
+		<span id="room">West of House</span>
+		<button class="icon-btn" id="help-open" type="button">how to play</button>
+	</header>
+
+	<div class="left">
+		<section class="stage">
+			<canvas id="scene" role="img" aria-label="Picture of West of House"></canvas>
+			<canvas id="grin" hidden aria-hidden="true"></canvas>
+		</section>
+		<section class="dialog-slot">
+			<div id="dialog-idle" aria-hidden="true">the house is listening</div>
+			<div id="dialog" class="dialog" hidden role="dialog" aria-live="polite">
+				<canvas id="portrait" aria-hidden="true"></canvas>
+				<div>
+					<div id="dialog-name"></div>
+					<p id="dialog-text"></p>
+				</div>
+				<span id="dialog-more" hidden>&#9660;</span>
+			</div>
+		</section>
+	</div>
+
+	<section class="console">
+		<div id="log" aria-live="polite"></div>
+		<form id="prompt" autocomplete="off">
+			<input id="cmd" type="text" spellcheck="false" autocapitalize="off" aria-label="Type a command" placeholder="type what you do" disabled>
+		</form>
+		<div class="chips">
+			<button type="button" data-cmd="look">look</button>
+			<button type="button" data-cmd="inventory">inventory</button>
+			<button type="button" data-cmd="wait">wait</button>
+			<button type="button" data-cmd="time">time</button>
+			<button type="button" data-cmd="save">save</button>
+			<button type="button" data-cmd="restore">restore</button>
+		</div>
+	</section>
+</div>
+
+<div id="title" class="overlay">
+	<h1>HOLLOW HOUSE</h1>
+	<p>It is 3:00 in the morning. Your sister June went missing from this house twenty years ago, at 3:33. You are back, and you don't remember driving here.</p>
+	<button id="start" class="big-btn" type="button">ENTER</button>
+	<p class="small">Built from the Zork I source (Infocom, 1980; MIT license, Microsoft 2025).<br>Type what you want to do, like <b>open mailbox</b> or <b>go north</b>.</p>
+</div>
+
+<div id="scare" class="overlay" hidden aria-hidden="true"><canvas id="scare-grin"></canvas></div>
+
+<div id="rewind" class="overlay" hidden aria-hidden="true">
+	<div class="rw">&#9664;&#9664; 3:00</div>
+	<div id="rewind-night">NIGHT 2</div>
+</div>
+
+<div id="ending" class="overlay ending" hidden>
+	<h2 id="ending-title">3:35 AM</h2>
+	<p id="ending-sub"></p>
+	<button id="again" class="big-btn" type="button">AGAIN</button>
+</div>
+
+<div id="help" class="overlay" hidden>
+	<div class="help-body">
+		<h2>HOW TO PLAY</h2>
+		<p>Type short commands and press Enter. <code>look</code>, <code>n</code> / <code>s</code> / <code>e</code> / <code>w</code> / <code>u</code> / <code>d</code>, <code>open window</code>, <code>take lamp</code>, <code>examine photo</code>, <code>talk to mother</code>, <code>read note</code>, <code>inventory</code>, <code>wait</code>. <code>time</code> tells you the hour and the night.</p>
+		<p>Every night starts at 3:00. At 3:33 the clock strikes and the house resets. You keep what you learned. The house keeps nothing, except the notes someone keeps leaving in the mailbox.</p>
+		<p>The dark under the house is not safe without a light. Mother doesn't like you touching things before dinner.</p>
+		<p>Click, press Enter or press space to skip typing and to move past a dialog box. <code>save</code> and <code>restore</code> keep one saved game in this browser.</p>
+		<h2>CREDITS</h2>
+		<p>Engine and parser from <b>Zork I</b> by Tim Anderson, Marc Blank, Bruce Daniels and Dave Lebling (Infocom), source released under the MIT license by Microsoft in 2025. The story, rooms, art and web player for Hollow House are new, under the MIT license.</p>
+		<p>Compiled with <b>ZILF</b> by Tara McGrew. Runs on <b>JSZM</b>, a public-domain Z-machine by zzo38. Font: VT323.</p>
+		<p>AI use: the code, story text and pixel art were drafted with Claude (Anthropic) in Claude Code from my design direction. I playtested it and I answer for it.</p>
+		<p><a href="https://github.com/NICOH-YAY/zork1">Source on GitHub</a></p>
+		<button id="help-close" class="big-btn" type="button">BACK</button>
+	</div>
+</div>
+
+<script src="js/jszm.js"></script>
+<script src="js/art.js"></script>
+<script src="js/player.js"></script>
+</body>
+</html>

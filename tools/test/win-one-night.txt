@@ -1,0 +1,35 @@
+# the full solution, played by someone who already knows it
+s
+lower bucket
+n
+open window
+w
+w
+move rug
+open trap door
+turn on radio
+e
+open pantry
+take lamp
+take matches
+w
+light lamp
+d
+e
+take box
+take locket
+w
+u
+u
+wind box
+n
+show locket to june
+s
+d
+d
+e
+e
+e
+climb rope
+w
+w

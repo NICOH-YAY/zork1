@@ -1,0 +1,4 @@
+sleep
+score
+lie down
+score
